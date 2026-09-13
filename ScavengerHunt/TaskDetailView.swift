@@ -6,9 +6,11 @@
 //
 
 import SwiftUI
+import UIKit
 
 struct TaskDetailView: View {
     @Binding var task: ScavengerTask
+    @State private var isPhotoPickerPresented = false
 
     var body: some View {
         ScrollView {
@@ -37,8 +39,21 @@ struct TaskDetailView: View {
                     Text("Photo")
                         .font(.headline)
 
-                    Text("Photo not added yet")
-                        .foregroundStyle(.secondary)
+                    if let image = selectedImage {
+                        Image(uiImage: image)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(maxHeight: 320)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                    } else {
+                        Text("No photo attached yet")
+                            .foregroundStyle(.secondary)
+                    }
+
+                    Button(task.photoData == nil ? "Attach Photo" : "Change Photo") {
+                        isPhotoPickerPresented = true
+                    }
+                    .buttonStyle(.borderedProminent)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -46,6 +61,24 @@ struct TaskDetailView: View {
         }
         .navigationTitle("Task Details")
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $isPhotoPickerPresented) {
+            PhotoPicker { data in
+                guard let data else {
+                    return
+                }
+
+                task.photoData = data
+                task.isCompleted = true
+            }
+        }
+    }
+
+    private var selectedImage: UIImage? {
+        guard let photoData = task.photoData else {
+            return nil
+        }
+
+        return UIImage(data: photoData)
     }
 }
 
